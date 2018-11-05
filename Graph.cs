@@ -11,6 +11,7 @@ namespace Graph
 {
     class Graph
     {
+        //объявление матрицы смежности и ее размерa
         private List<List<int>> matr = new List<List<int>>();
         private int size;
 
@@ -19,12 +20,14 @@ namespace Graph
             get { return size; }
         }
 
-        //номера вершин
+        //уровень каждой вершины
         private List<int> levels = new List<int>();
 
+        //количество уровней
         private int numberOfLevels;
 
 
+        //конструктор, все изначально 0
         public Graph()
         {
             size = 0;
@@ -36,6 +39,7 @@ namespace Graph
         //конструктор заполнения матрицы смежности, где n - размер, split - разделенная строка
         public Graph(string way)
         {
+
             StreamReader sr = new StreamReader(way);
 
             //считываем первую строку - число вершин графа
@@ -55,7 +59,6 @@ namespace Graph
                 
                 for (int j = 0; j < size; j++)
                 {
-                    //MessageBox.Show(split[j]);
                     //конвертируем строку в int
                     stringMath.Add(Convert.ToInt32(split[j]));
                 }
@@ -69,51 +72,68 @@ namespace Graph
 
         }
 
-
+        
+        //рисование графа
         public Bitmap drawGraph(Bitmap bmp, PictureBox picture)
         {
+
             Graphics drawGr = Graphics.FromImage(bmp);
 
+            //для удобства
             int x = picture.Width / 2;
             int y = picture.Height / 2;
 
+            //требуется для уменьшения каждого нового круга
             int buf = 0;
+
+            //количество не нарисованных вершин
             int size1 = size;
+
+            //для рисования точек по кругу
             int size2 = size;
+
+            //если вершин >50, то ограничиваем, чтобы в каждом кругу было их не более 50
             if (size >= 50)
                 size2 = 50;
             
-
+            //массив координат
             PointF[] cord = new PointF[size];
 
+            //заполнение координат каждой точки
             for (int i = 0; i < size; i++)
             {
 
+                //если превышаем отметку в кратное 50-ти число вершин, делаем меньший круг
                 if (i % 50 == 0 && i != 0)
                 {
+                    //уменьшаем радиус нового круга и количество не нарисованных вершин
                     buf += 35;
                     size1 -= 50;
                 }
 
+                //если вершин >50, то ограничиваем, чтобы в каждом кругу было их не более 50
                 if (size1 > 50)
                     size2 = 50;
                 else
                     if (size1 > 0)
                     size2 = size1;
 
+                //заполнение координат для конкретного пикчербокса
                 cord[i].X = (float)(x + (Math.Cos((Math.PI / 2) + (2 * Math.PI / size2) * (i % 50)) * (-360 + buf)));
                 cord[i].Y = (float)(y + (Math.Sin((Math.PI / 2) + (2 * Math.PI / size2) * (i % 50)) * (-360 + buf)));
             }
 
+            //рисование
             for (int i = 0; i < size; i++)
             {
-
+                //рисуем номера вершин и сами вершины
                 drawGr.DrawString(Convert.ToString(i + 1), new Font("Arial", 10), Brushes.Red, cord[i].X - 7, cord[i].Y - 20);
                 drawGr.FillEllipse(Brushes.Green, new Rectangle((int)(cord[i].X - 6), (int)(cord[i].Y - 6), 13, 13));
 
                 for (int j = 0; j < size; j++)
                 {
 
+                    //если есть ребро между вершинами, рисуем его
                     if (matr[i][j] != 0)
                     {
                         drawGr.DrawLine(new Pen(Color.Black), cord[i], cord[j]);
@@ -125,36 +145,42 @@ namespace Graph
         }
 
 
+        //рисование дерева
         public Bitmap drawTree(Bitmap bmp, PictureBox picture)
         {
             Graphics drawTree = Graphics.FromImage(bmp);
 
+            //для удобства
             int x = picture.Width;
             int y = picture.Height;
 
 
-
+            
             PointF[] cord = new PointF[size];
 
+            //заполнение координат для каждого уровня
             for (int i = 1; i <= numberOfLevels; i++)
             {
 
-                int k = 1;
+                //порядок вершины среди всех на ее уровне
+                int n = 1;
 
-               // MessageBox.Show(Convert.ToString(VertexOfLevel(i)), Convert.ToString(i + 1));
-
+                //заполнение координат
                 for (int j = 0; j < size; j++)
                 {
+                    //если уровень вершины совпадает с тем, который рисуем
                     if (levels[j] == i)
                     {
-                        cord[j].X = (float)( k * x / (VertexOfLevel(i) + 1) - 200);
-                        cord[j].Y = (float)( i * (y / numberOfLevels) - 100);
+                        //равномерно распределяем по пикчербоксу
+                        cord[j].X = (float)( n * x / (VertexOfLevel(i) + 1));
+                        cord[j].Y = (float)( i * (y / numberOfLevels) - 15);
 
-                        k++;
+                        n++;
                     }
                 }
             }
 
+            //рисование
             for (int i = 0; i < size; i++)
             {
 
@@ -164,6 +190,7 @@ namespace Graph
                 for (int j = 0; j < size; j++)
                 {
 
+                    //если есть ребро между вершинами
                     if (matr[i][j] != 0)
                     {
                         drawTree.DrawLine(new Pen(Color.Black), cord[i], cord[j]);
@@ -175,11 +202,13 @@ namespace Graph
         }
 
 
-        
+        //добавить вершину
         public void AddVer()
         {
+            //выделяем место под строку
             matr.Add(new List<int>());
 
+            //заполняем новую строку и столбец нулями
             for (int i = 0; i < size; i++)
             {
                 matr[i].Add(0);
@@ -193,12 +222,15 @@ namespace Graph
         }
 
 
+        //удалить вершину
         public void DelVer(int number)
         {
             
             if (number > size || size == 0) return;
             if (number == -1)
                 number = size;
+
+            //удаление столбца и строки из матрицы смежности
 
             matr.RemoveAt(number - 1);
 
@@ -211,8 +243,10 @@ namespace Graph
         }
 
 
+        //удалить ербро
         public void DelEdge(int num1, int num2)
         {
+
             if (num1 > size || num2 > size || size == 0) return;
 
             matr[num1 - 1][num2 - 1] = 0;
@@ -222,6 +256,7 @@ namespace Graph
         }
 
 
+        //добавить ребро
         public void AddEdge(int start, int finish)
         {
             if (start > size || finish > size || size == 0) return;
@@ -234,8 +269,10 @@ namespace Graph
         public void Level()
         {
 
+            //колчиество вершин с уровнями
             int lvlC = levels.Count;
 
+            //если вершин больше
             if (lvlC < size)
             {
                
@@ -254,6 +291,7 @@ namespace Graph
                 }
             }
             
+            //всем проставляем уровень 0
             for (int i = 0; i < size; i++)
                 levels[i] = 0;
 
@@ -261,25 +299,27 @@ namespace Graph
 
            for (int i = 0; i < size; i++)
            {
+                //если не проставлен уровень, то ставим первый
                 if (levels[i] == 0)
                     levels[i] = 1;
 
-                 //MessageBox.Show(Convert.ToString(levels[i]), Convert.ToString(i + 1));
-
+                //рекурсия по вершинам начиная с нашей, у которой 1 уровень
                 giveNumber(1, i);
                
            }
 
+           //подсчет количества уровней
            int k = 1;
            for (int i = 0; i < size; i++)
            {
+                
                 k = Math.Max(k, levels[i]);
-               // MessageBox.Show(Convert.ToString(levels[i]), "вершина ЙКУЙ " + Convert.ToString(i + 1));
+               
            }
 
            //количество уровней
             numberOfLevels = k;
-            //MessageBox.Show(Convert.ToString(numberOfLevels), "количество уровней");
+            
             return;
         }
 
@@ -289,25 +329,29 @@ namespace Graph
         {
             for (int j = 0; j < size; j++)
             {
+                //если есть ребро
                if (matr[ver][j] != 0)
                {
+                    //если не проставлен уровень
                     if (levels[j] == 0)
                     {
+                        //уровень на 1 больше, чем у предыдущего и запускаем рекурсию от этой вершины
                         levels[j] = number + 1;
-                        //MessageBox.Show(Convert.ToString(levels[j]), "вершина рекурсия" + Convert.ToString(j + 1));
                         giveNumber(number + 1, j);
                     }
                     else
                     {
+                        //если у вершины, из которой пришли, уровень больше текущего, то меняем уровень предшественника
                         if (levels[ver] > levels[j] + 1)
                             levels[ver] = levels[j] + 1;
                     }
                 }
                 
                 
-                //MessageBox.Show(Convert.ToString(levels[j]), "вершина ЙКУЙ " + Convert.ToString(j + 1));
+               
             }
         }
+
 
         //количество вершин переданного уровня
         public int VertexOfLevel(int number)
@@ -317,7 +361,7 @@ namespace Graph
 
             for (int i = 0; i < size; i++)
             {
-                //MessageBox.Show(Convert.ToString(levels[i]), "Номер вершины " + Convert.ToString(i + 1));
+                
                 if (levels[i] == number)
                     count++;
             }
@@ -327,6 +371,7 @@ namespace Graph
         }
 
 
+        //сохранение в файл
         public void Save(string way)
         {
 
